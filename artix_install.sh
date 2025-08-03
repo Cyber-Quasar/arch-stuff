@@ -16,7 +16,10 @@
 # 3. Partition your disk with cfdisk:
 #    cfdisk /dev/sda
 #    Create: sda1 (EFI, 512 MiB), sda2 (swap, 4 GiB), sda3 (rest, root)
-# 4. Then run this script
+# 4. Then run this script by
+# curl -o artix_install.sh https://raw.githubusercontent.com/Cyber-Quasar/artix-stuff/refs/heads/main/artix_install.sh
+# chmod +x artix_install.sh
+# sudo ./artix_install.sh
 #
 # Run this script AFTER completing the above prerequisites
 
