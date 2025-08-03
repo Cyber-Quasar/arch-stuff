@@ -545,7 +545,6 @@ chmod +x /mnt/tmp/post_install.sh
 
 log_info "Unmounting filesystems..."
 umount -R /mnt
-swapoff ${DISK}2
 
 log_success "Installation script completed!"
 echo ""
