@@ -1,9 +1,8 @@
-cat > /tmp/post_install.sh << 'POST_EOF'
 #!/bin/bash
 
 # Post-installation script for Hyprland setup
-# If you can't find this script after reboot, check: ls -la /tmp/post_install.sh
-# Then move it to your home: mv /tmp/post_install.sh ~/ && ./post_install.sh
+# Download and run this script after completing the base Artix installation
+# Usage: curl -o post_install.sh [URL] && chmod +x post_install.sh && ./post_install.sh
 
 set -e
 
@@ -43,7 +42,7 @@ log_info "Installing yay AUR helper..."
 cd /tmp
 git clone https://aur.archlinux.org/yay.git
 cd yay
-makepkg -si --noconfirm
+makepkg -si --needed
 cd ~
 
 log_info "Installing Hyprland and accessories..."
@@ -357,5 +356,3 @@ log_success "Setup completed successfully!"
 log_info "Please reboot to start using your new Hyprland desktop environment."
 log_info "After reboot, you can log in and Hyprland should start automatically."
 log_warning "Remember to reboot or run 'hyprctl reload' after any Hyprland config changes."
-
-POST_EOF
