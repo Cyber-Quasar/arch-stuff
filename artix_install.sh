@@ -2,7 +2,23 @@
 
 # Artix Linux + Hyprland Setup Script
 # Based on your installation guide for Lenovo 110-14IBR with Dinit and macOS-style Hyprbars
-# Run this script AFTER connecting to the internet via connmanctl
+# 
+# Prerequisites before running this script:
+# 1. Boot from Artix Live ISO (dinit flavor)
+# 2. Connect to internet via connmanctl:
+#    connmanctl
+#    > enable wifi
+#    > scan wifi
+#    > services
+#    > agent on
+#    > connect wifi_<YOUR_WIFI_PATH>
+#    > quit
+# 3. Partition your disk with cfdisk:
+#    cfdisk /dev/sda
+#    Create: sda1 (EFI, 512 MiB), sda2 (swap, 4 GiB), sda3 (rest, root)
+# 4. Then run this script
+#
+# Run this script AFTER completing the above prerequisites
 
 set -e  # Exit on any error
 
@@ -95,8 +111,8 @@ mount ${DISK}1 /mnt/boot/efi
 
 log_info "Installing base system..."
 basestrap /mnt base linux linux-firmware sof-firmware base-devel nano dinit elogind-dinit \
-connman-dinit grub efibootmgr ntp ntp-dinit linux-base man-db man-pages texinfo iw \
-wpa_supplicant networkmanager dhcpcd net-tools visudo dosfstools ntfs-3g e2fsprogs \
+connman-dinit grub efibootmgr ntp ntp-dinit man-db man-pages texinfo iw \
+wpa_supplicant networkmanager dhcpcd net-tools sudo dosfstools ntfs-3g e2fsprogs \
 exfatprogs git
 
 log_info "Generating fstab..."
@@ -118,13 +134,13 @@ locale-gen
 echo "LANG=en_US.UTF-8" > /etc/locale.conf
 
 # Set hostname
-echo "CyberQuasar" > /etc/hostname
+echo "Vendetta" > /etc/hostname
 
 # Configure hosts file
 cat > /etc/hosts << 'HOSTS_EOF'
 127.0.0.1    localhost
 ::1          localhost
-127.0.1.1    CyberQuasar.localdomain CyberQuasar
+127.0.1.1    Vendetta.localdomain Vendetta
 HOSTS_EOF
 
 # Set root password
@@ -132,15 +148,15 @@ echo "Please set root password:"
 passwd
 
 # Create user
-useradd -mG wheel -s /bin/bash XaveriusJuan
-echo "Please set password for XaveriusJuan:"
-passwd XaveriusJuan
+useradd -mG wheel -s /bin/bash CyberQuasar
+echo "Please set password for CyberQuasar:"
+passwd CyberQuasar
 
 # Configure sudo
 sed -i 's/# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/' /etc/sudoers
 
 # Install and configure GRUB
-grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=ARTIX
+grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Artix
 grub-mkconfig -o /boot/grub/grub.cfg
 
 # Enable essential services
@@ -158,10 +174,10 @@ rm /mnt/configure_system.sh
 
 log_success "Base installation completed!"
 log_info "You can now reboot into your new system."
-log_info "After reboot, run this script again with the --post-install flag to continue with Hyprland setup."
+log_info "After reboot, move and run the post-install script to set up Hyprland."
 
-# Create post-install script
-cat > /mnt/home/${USERNAME}/post_install.sh << 'POST_EOF'
+# Create post-install script in /mnt/tmp (accessible after reboot)
+cat > /mnt/tmp/post_install.sh << 'POST_EOF'
 #!/bin/bash
 
 # Post-installation script for Hyprland setup
@@ -186,6 +202,8 @@ log_success() {
 log_warning() {
     echo -e "${YELLOW}[WARNING]${NC} $1"
 }
+
+log_info "Starting Hyprland post-installation setup..."
 
 # Part 2: Install Wayland and Hyprland
 
@@ -502,8 +520,7 @@ log_warning "Remember to reboot or run 'hyprctl reload' after any Hyprland confi
 
 POST_EOF
 
-chmod +x /mnt/home/${USERNAME}/post_install.sh
-chown 1000:1000 /mnt/home/${USERNAME}/post_install.sh
+chmod +x /mnt/tmp/post_install.sh
 
 log_info "Unmounting filesystems..."
 umount -R /mnt
@@ -515,7 +532,7 @@ log_info "Next steps:"
 echo "1. Remove the USB drive"
 echo "2. Reboot your system"
 echo "3. Log in as ${USERNAME}"
-echo "4. Run: ./post_install.sh"
+echo "4. Move and run: mv /tmp/post_install.sh ~/ && ./post_install.sh"
 echo "5. Reboot again to enjoy your new Hyprland desktop!"
 echo ""
 log_info "The post-install script will:"
