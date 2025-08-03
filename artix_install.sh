@@ -99,24 +99,51 @@ log_warning "Make sure you have partitioned $DISK correctly before continuing!"
 confirm_continue
 
 log_info "Formatting partitions..."
-mkfs.fat -F32 ${DISK}1
-mkswap ${DISK}2
-swapon ${DISK}2
-mkfs.btrfs ${DISK}3
+log_info "Formatting ${DISK}1 as FAT32..."
+mkfs.fat -F32 ${DISK}1 && log_success "EFI partition formatted" || { log_error "Failed to format EFI partition"; exit 1; }
+
+log_info "Creating and enabling swap on ${DISK}2..."
+mkswap ${DISK}2 && log_success "Swap created" || { log_error "Failed to create swap"; exit 1; }
+swapon ${DISK}2 && log_success "Swap enabled" || { log_error "Failed to enable swap"; exit 1; }
+
+log_info "Formatting ${DISK}3 as Btrfs..."
+mkfs.btrfs ${DISK}3 && log_success "Root partition formatted" || { log_error "Failed to format root partition"; exit 1; }
 
 log_info "Mounting filesystems..."
-mount ${DISK}3 /mnt
-mkdir -p /mnt/boot/efi
-mount ${DISK}1 /mnt/boot/efi
+log_info "Mounting root partition..."
+mount ${DISK}3 /mnt && log_success "Root partition mounted" || { log_error "Failed to mount root partition"; exit 1; }
+
+log_info "Creating EFI directory..."
+mkdir -p /mnt/boot/efi && log_success "EFI directory created" || { log_error "Failed to create EFI directory"; exit 1; }
+
+log_info "Mounting EFI partition..."
+mount ${DISK}1 /mnt/boot/efi && log_success "EFI partition mounted" || { log_error "Failed to mount EFI partition"; exit 1; }
+
+log_info "Verifying mounts..."
+df -h | grep /mnt
 
 log_info "Installing base system..."
-basestrap /mnt base linux linux-firmware sof-firmware base-devel nano dinit elogind-dinit \
+log_info "This may take several minutes depending on your internet speed..."
+if basestrap /mnt base linux linux-firmware sof-firmware base-devel nano dinit elogind-dinit \
 connman-dinit grub efibootmgr ntp ntp-dinit man-db man-pages texinfo iw \
 wpa_supplicant networkmanager dhcpcd net-tools sudo dosfstools ntfs-3g e2fsprogs \
-exfatprogs git
+exfatprogs git; then
+    log_success "Base system installed successfully"
+else
+    log_error "Failed to install base system"
+    log_info "Check your internet connection and try again"
+    exit 1
+fi
 
 log_info "Generating fstab..."
-fstabgen -U /mnt > /mnt/etc/fstab
+if fstabgen -U /mnt > /mnt/etc/fstab; then
+    log_success "fstab generated successfully"
+    log_info "Generated fstab contents:"
+    cat /mnt/etc/fstab
+else
+    log_error "Failed to generate fstab"
+    exit 1
+fi
 
 log_info "Entering chroot and configuring system..."
 
@@ -169,7 +196,13 @@ echo "Base system configuration completed!"
 EOF
 
 chmod +x /mnt/configure_system.sh
-artix-chroot /mnt /configure_system.sh
+log_info "Running chroot configuration..."
+if artix-chroot /mnt /configure_system.sh; then
+    log_success "Chroot configuration completed successfully"
+else
+    log_error "Chroot configuration failed"
+    exit 1
+fi
 rm /mnt/configure_system.sh
 
 log_success "Base installation completed!"
@@ -546,13 +579,37 @@ log_success "Post-install script created at /tmp/post_install.sh (after reboot)"
 # Verify the script was created
 if [[ -f /mnt/tmp/post_install.sh ]]; then
     log_success "Post-install script verified and ready"
-    ls -la /mnt/tmp/post_install.sh
+    log_info "Script size: $(wc -l < /mnt/tmp/post_install.sh) lines"
+    log_info "Script permissions: $(ls -la /mnt/tmp/post_install.sh | awk '{print $1}')"
 else
     log_error "Failed to create post-install script!"
+    exit 1
 fi
 
 log_info "Unmounting filesystems..."
-umount -R /mnt
+log_info "Unmounting /mnt/boot/efi..."
+if umount /mnt/boot/efi; then
+    log_success "EFI partition unmounted"
+else
+    log_warning "Failed to unmount EFI partition (may already be unmounted)"
+fi
+
+log_info "Unmounting /mnt..."
+if umount /mnt; then
+    log_success "Root partition unmounted"
+else
+    log_error "Failed to unmount root partition"
+    log_info "Trying forced unmount..."
+    umount -f /mnt || log_warning "Forced unmount also failed"
+fi
+
+log_info "Checking if any mounts remain..."
+if mount | grep -q "/mnt"; then
+    log_warning "Some mounts still active:"
+    mount | grep "/mnt"
+else
+    log_success "All mounts successfully removed"
+fi
 
 log_success "Installation script completed!"
 echo ""
