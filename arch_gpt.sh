@@ -114,7 +114,7 @@ sed -i 's/# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/' /etc/sudoers
 
 # Install and configure GRUB
 log_info "Installing GRUB..."
-grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Arch
+grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id="Arch Linux"
 cat > /etc/default/grub <<GRUBCFG
 GRUB_TIMEOUT=0
 GRUB_DISTRIBUTOR=Arch
