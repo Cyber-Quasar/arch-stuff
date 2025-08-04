@@ -95,7 +95,6 @@ trap cleanup EXIT INT TERM
 # Check if we're in chroot
 if [[ "$(stat -c %d:%i /)" != "$(stat -c %d:%i /proc/1/root/.)" ]]; then
     trap cleanup EXIT INT TERM
-
     
     # Verify live environment
     if ! grep -q "Arch Linux" /etc/os-release; then
@@ -389,14 +388,7 @@ POSTINSTALL
 
     # Run the complete installation in chroot
     log_info "Starting complete system configuration..."
-    arch-chroot /mnt /root/complete_install.sh || log_error "Chroot configuration failed"
-
-    cleanup
-    echo -e "\n${GREEN}=== HYPRLAND INSTALL COMPLETE ==="
-    log_info "Press ${RED}CTRL+C${NC} to cancel reboot"
-    for i in {5..1}; do
-        echo -ne "${YELLOW}Rebooting in ${i}...${NC}\r"
-        sleep 1
-    done
-    reboot
-fi
+    if ! arch-chroot /mnt /root/complete_install.sh; then
+        log_error "Chroot configuration failed"
+        exit 1
+    fi
