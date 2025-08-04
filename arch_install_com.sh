@@ -95,11 +95,6 @@ trap cleanup EXIT INT TERM
 # Check if we're in chroot
 if [[ "$(stat -c %d:%i /)" != "$(stat -c %d:%i /proc/1/root/.)" ]]; then
     log_info "Starting Arch Linux complete installation..."
-    
-    # Verify live environment
-    if ! grep -q "Arch Linux" /etc/os-release; then
-        log_error "Must run from Arch Linux Live ISO"
-    fi
 
     # Verify internet
     if ! ping -c 3 archlinux.org &>/dev/null; then
