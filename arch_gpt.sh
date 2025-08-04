@@ -30,15 +30,6 @@ log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1" | tee -a "$LOG_FILE"; }
 log_warning() { echo -e "${YELLOW}[WARNING]${NC} $1" | tee -a "$LOG_FILE"; }
 log_error()   { echo -e "${RED}[ERROR]${NC} $1" | tee -a "$LOG_FILE"; exit 1; }
 
-# === Cleanup Function ===
-cleanup() {
-    log_info "Cleaning up mounts..."
-    umount -R /mnt 2>/dev/null || true
-    rm -f /tmp/arch_install.* 2>/dev/null || true
-}
-
-trap cleanup EXIT INT TERM
-
 # === Initial Checks ===
 if [[ $EUID -ne 0 ]]; then log_error "Run as root."; fi
 
