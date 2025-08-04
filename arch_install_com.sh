@@ -94,7 +94,7 @@ trap cleanup EXIT INT TERM
 
 # Check if we're in chroot
 if [[ "$(stat -c %d:%i /)" != "$(stat -c %d:%i /proc/1/root/.)" ]]; then
-    log_info "Starting Arch Linux complete installation..."
+    trap cleanup EXIT INT TERM
 
     
     # Verify live environment
@@ -391,26 +391,12 @@ POSTINSTALL
     log_info "Starting complete system configuration..."
     arch-chroot /mnt /root/complete_install.sh || log_error "Chroot configuration failed"
 
-    log_success "Complete installation finished!"
-    log_info "Unmounting filesystems..."
-    umount -R /mnt
-
-    # Reboot countdown
-    log_info ""
-    log_info "System ready for first boot!"
-    log_info "Hyprland will start automatically after reboot"
-    log_info ""
-    log_warning "System will reboot automatically in 5 seconds..."
-    log_warning "Press Ctrl+C NOW to cancel reboot and make manual changes"
-    echo -e "\n${YELLOW}Reboot countdown:${NC}"
-    
+    cleanup
+    echo -e "\n${GREEN}=== HYPRLAND INSTALL COMPLETE ==="
+    log_info "Press ${RED}CTRL+C${NC} to cancel reboot"
     for i in {5..1}; do
-        echo -ne "${BLUE}>>${NC} [${i}] ${RED}⬤${NC}${YELLOW}⬤⬤⬤⬤${NC}" 
+        echo -ne "${YELLOW}Rebooting in ${i}...${NC}\r"
         sleep 1
-        echo -ne "\r"
     done
-    
-    log_success "Rebooting now..."
-    log_info "After reboot, login as ${USERNAME} to start your Hyprland session"
     reboot
 fi
