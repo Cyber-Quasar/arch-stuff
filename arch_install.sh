@@ -73,7 +73,6 @@ cleanup() {
     log_info "Cleaning up..."
     umount -R /mnt 2>/dev/null || true
     swapoff "${DISK}2" 2>/dev/null || true
-    rm -f /tmp/arch_install.* 2>/dev/null || true
 }
 
 confirm_continue() {
@@ -96,7 +95,7 @@ trap cleanup EXIT INT TERM
 
 # Check if we're in chroot
 if [[ "$(stat -c %d:%i /)" != "$(stat -c %d:%i /proc/1/root/.)" ]]; then
-    log_info "Starting Arch Linux base installation..."
+    trap cleanup EXIT INT TERM
     
     # Verify live environment
     if ! grep -q "Arch Linux" /etc/os-release; then
@@ -271,19 +270,12 @@ systemctl enable greetd || { echo "Greetd enable failed"; exit 1; }
 echo "Installation complete inside chroot"
 EOF
 
-    log_success "Base installation complete!"
-    log_info "Unmounting filesystems..."
-    umount -R /mnt
-
-    # Enhanced reboot countdown
-    echo -e "\n${GREEN}=== Installation Complete ==="
-    log_info "System will automatically reboot in 5 seconds..."
-    log_info "Press ${RED}Ctrl+C${NC} to cancel"
-    echo -ne "${YELLOW}Rebooting in:${NC} "
+    cleanup
+    log_success "=== INSTALLATION COMPLETE ==="
+    echo -e "\n${YELLOW}The system will reboot in:${NC}"
     for i in {5..1}; do
-        echo -ne "${i} "
+        echo -e "${RED}>>>${NC} ${i}..."
         sleep 1
     done
-    echo -e "\n"
     reboot
 fi
