@@ -9,10 +9,10 @@
 # 2a. If via iwctl, do these steps:
 # rfkill unblock all
 # iwctl
-# > sttaion list
+# > station list
 # > station wlan0 scan
 # > station wlan0 get-networks
-# > sttaion wlan0 connect <SSID>
+# > station wlan0 connect <SSID>
 # > <enter passphrase>
 # > exit
 # 
@@ -168,23 +168,28 @@ if [[ "$(stat -c %d:%i /)" != "$(stat -c %d:%i /proc/1/root/.)" ]]; then
 
     # Prepare post-install script in target system
     log_info "Preparing post-install configuration..."
-    cat > /mnt/root/complete_install.sh <<'POSTINSTALL'
+    cat > /mnt/root/complete_install.sh <<POSTINSTALL
 #!/bin/bash
 set -euo pipefail
 
+# Export variables for use in script
+export TIMEZONE="$TIMEZONE"
+export HOSTNAME="$HOSTNAME"
+export USERNAME="$USERNAME"
+
 # Basic setup
-ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime
+ln -sf /usr/share/zoneinfo/\$TIMEZONE /etc/localtime
 hwclock --systohc
 echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
 locale-gen
 echo "LANG=en_US.UTF-8" > /etc/locale.conf
 
 # Network configuration
-echo "$HOSTNAME" > /etc/hostname
+echo "\$HOSTNAME" > /etc/hostname
 cat > /etc/hosts <<HOSTS_EOF
 127.0.0.1    localhost
 ::1          localhost
-127.0.1.1    $HOSTNAME.localdomain $HOSTNAME
+127.0.1.1    \$HOSTNAME.localdomain \$HOSTNAME
 HOSTS_EOF
 
 # User setup
@@ -193,9 +198,9 @@ until passwd; do
     echo "Please try again"
 done
 
-useradd -mG wheel -s /bin/bash "$USERNAME" || { echo "User creation failed"; exit 1; }
-echo "Set password for $USERNAME:"
-until passwd "$USERNAME"; do
+useradd -mG wheel -s /bin/bash "\$USERNAME" || { echo "User creation failed"; exit 1; }
+echo "Set password for \$USERNAME:"
+until passwd "\$USERNAME"; do
     echo "Please try again"
 done
 
@@ -223,37 +228,60 @@ pacman -S --noconfirm --needed git cmake meson gcc cpio \
     wl-clipboard brightnessctl pamixer ttf-noto-fonts \
     greetd greetd-tuigreet thunar thunar-volman \
     thunar-archive-plugin gnome-keyring flatpak \
-    fastfetch bpytop || { echo "Package install failed"; exit 1; }
+    fastfetch python python-pip openssh syncthing || { echo "Package install failed"; exit 1; }
 
-# AUR helper
-sudo -u "$USERNAME" bash <<USEREOF
+# AUR helper (yay)
+sudo -u "\$USERNAME" bash <<USEREOF
 set -euo pipefail
-git clone https://aur.archlinux.org/yay-bin.git /tmp/yay-bin || { echo "Yay clone failed"; exit 1; }
-cd /tmp/yay-bin
-makepkg -si --noconfirm || { echo "Yay build failed"; exit 1; }
+cd /tmp
+git clone https://aur.archlinux.org/yay.git || { echo "Yay clone failed"; exit 1; }
+cd yay
+makepkg -si --needed || { echo "Yay build failed"; exit 1; }
 cd ~
 USEREOF
 
-# Ghostty terminal
-sudo -u "$USERNAME" yay -S --noconfirm ghostty || { echo "Ghostty install failed"; exit 1; }
+# Install AUR packages
+sudo -u "\$USERNAME" bash <<USEREOF
+set -euo pipefail
+echo "2" | yay -S --noconfirm ghostty-git || { echo "Ghostty install failed"; exit 1; }
+echo "2" | yay -S --noconfirm hyprbars-hyprland-git || { echo "Hyprbars install failed"; exit 1; }
+yay -S --noconfirm ttf-san-francisco-pro || { echo "SF Pro font install failed"; exit 1; }
+USEREOF
 
-# Hyprland plugins
-git clone https://github.com/hyprwm/hyprpm /tmp/hyprpm || { echo "Hyprpm clone failed"; exit 1; }
-cd /tmp/hyprpm
-make all || { echo "Hyprpm build failed"; exit 1; }
-make install || { echo "Hyprpm install failed"; exit 1; }
+# Install bpytop
+python -m pip install psutil || { echo "psutil install failed"; exit 1; }
+sudo -u "\$USERNAME" bash <<USEREOF
+set -euo pipefail
+cd /tmp
+git clone https://github.com/aristocratos/bpytop.git || { echo "bpytop clone failed"; exit 1; }
+cd bpytop
+sudo make install || { echo "bpytop install failed"; exit 1; }
 cd ~
-
-sudo -u "$USERNAME" hyprpm add https://github.com/hyprwm/hyprland-plugins || { echo "Plugin add failed"; exit 1; }
-sudo -u "$USERNAME" hyprpm enable hyprbars || { echo "Hyprbars enable failed"; exit 1; }
-sudo -u "$USERNAME" hyprpm update || { echo "Hyprpm update failed"; exit 1; }
+rm -rf /tmp/bpytop
+USEREOF
 
 # Flatpak setup
-sudo -u "$USERNAME" flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo || { echo "Flathub add failed"; exit 1; }
+sudo -u "\$USERNAME" flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo || { echo "Flathub add failed"; exit 1; }
+
+# Install Flatpak apps
+sudo -u "\$USERNAME" bash <<USEREOF
+set -euo pipefail
+flatpak install -y flathub com.brave.Browser || { echo "Brave install failed"; exit 1; }
+flatpak install -y flathub com.bitwarden.desktop || { echo "Bitwarden install failed"; exit 1; }
+flatpak install -y flathub org.localsend.localsend || { echo "LocalSend install failed"; exit 1; }
+USEREOF
+
+# Create config directories
+sudo -u "\$USERNAME" mkdir -p "/home/\$USERNAME/.config/hypr" || { echo "Config dir creation failed"; exit 1; }
+sudo -u "\$USERNAME" mkdir -p "/home/\$USERNAME/.config/foot" || { echo "Foot config dir creation failed"; exit 1; }
+sudo -u "\$USERNAME" mkdir -p "/home/\$USERNAME/.config/ghostty" || { echo "Ghostty config dir creation failed"; exit 1; }
+sudo -u "\$USERNAME" mkdir -p "/home/\$USERNAME/Pictures" || { echo "Pictures dir creation failed"; exit 1; }
+
+# Download wallpaper
+sudo -u "\$USERNAME" curl -o "/home/\$USERNAME/Pictures/wallpaper.jpg" "https://images.pexels.com/photos/1169754/pexels-photo-1169754.jpeg" || { echo "Wallpaper download failed"; exit 1; }
 
 # Hyprland configuration
-sudo -u "$USERNAME" mkdir -p "/home/$USERNAME/.config/hypr" || { echo "Config dir creation failed"; exit 1; }
-cat > "/home/$USERNAME/.config/hypr/hyprland.conf" <<'HYPR_EOF'
+cat > "/home/\$USERNAME/.config/hypr/hyprland.conf" <<'HYPR_EOF'
 # Monitor configuration
 monitor=,preferred,auto,1
 
@@ -261,121 +289,238 @@ monitor=,preferred,auto,1
 exec-once = waybar
 exec-once = hyprpaper
 exec-once = foot --server
-exec-once = hyprpm reload -n
 
 # Environment
 env = XCURSOR_SIZE,24
+env = HYPRCURSOR_SIZE,24
 
 # Input configuration
 input {
     kb_layout = us
+    kb_variant = 
+    kb_model = 
+    kb_options = 
+    kb_rules = 
     follow_mouse = 1
+    sensitivity = 0
+    accel_profile = flat
     touchpad {
         natural_scroll = false
-        tap-to-click = false
     }
 }
 
-# Window and workspace settings
+# General settings (Look and Feel)
 general {
     gaps_in = 4
     gaps_out = 8
     border_size = 2
     col.active_border = rgb(FF90BC) rgb(5FBDFF) 45deg
     col.inactive_border = rgba(595959aa)
+    resize_on_border = false
+    allow_tearing = false
     layout = dwindle
 }
 
+# Decoration settings
 decoration {
     rounding = 10
     active_opacity = 0.93
     inactive_opacity = 0.87
+
+    shadow {
+        enabled = true
+        range = 4
+        render_power = 3
+        color = rgba(00000033)
+    }
+
     blur {
         enabled = true
         size = 3
         passes = 1
+        new_optimizations = true
+        ignore_opacity = false
+        vibrancy = 0.25
     }
 }
 
-# hyprbars configuration
-plugin = hyprbars
-
-hyprbars {
-    bar_height = 28
-    bar_precedence_over_border = true
-    bar_button_padding = 5
-    bar_button_radius = 7
-    bar_button_border_size = 0
-    bar_button_color_close = rgb(ff605c)
-    bar_button_color_maximize = rgb(ffbd44)
-    bar_button_color_minimize = rgb(00ca4e)
-    bar_button_color_close_hover = rgba(ff605c77)
-    bar_button_color_maximize_hover = rgba(ffbd4477)
-    bar_button_color_minimize_hover = rgba(00ca4e77)
-    bar_title_enabled = true
-    bar_title_font = Noto Sans
-    bar_title_size = 12
-    bar_title_color = rgb(000000)
-    bar_color = rgba(245,245,245,0.90)
-    bar_border_size = 0
-    bar_buttons_alignment = left
+# Animation settings
+animations {
+    enabled = true
+    bezier = myBezier, 0.05, 0.9, 0.1, 1.05
+    animation = windows, 1, 3, myBezier
+    animation = windowsOut, 1, 5, default, popin 80%
+    animation = border, 1, 10, default
+    animation = fade, 1, 5, default
+    animation = workspaces, 1, 6, default
 }
 
-# Keybindings
-$mainMod = SUPER
-$terminal = foot
-$altTerminal = ghostty
-$fileManager = thunar
-$menu = wofi --show drun
+# Layout settings
+dwindle {
+    pseudotile = true
+    preserve_split = true
+}
 
-bind = $mainMod, Return, exec, $terminal
-bind = $mainMod SHIFT, Return, exec, $altTerminal
-bind = $mainMod SHIFT, C, killactive,
-bind = $mainMod SHIFT, X, exit,
-bind = $mainMod, F, togglefloating,
-bind = $mainMod, Space, exec, $menu
-bind = $mainMod, E, exec, $fileManager
+master {
+    new_is_master = true
+}
+
+# Gestures
+gestures {
+    workspace_swipe = true
+    workspace_swipe_fingers = 3
+}
+
+# Window rules
+windowrule = suppressevent maximize, class:.*
+windowrule = nofocus,class:^\$,title:^\$,xwayland:1,floating:1,fullscreen:0,pinned:0
+windowrule = float, ^(pavucontrol)\$
+windowrule = float, ^(file-roller)\$
+windowrulev2 = opaque, class:^(ghostty)\$
+
+# Keybindings
+\$mainMod = SUPER
+\$terminal = ghostty
+\$foot = foot
+\$fileManager = thunar
+\$menu = wofi --show drun
+
+# Basic bindings
+bind = \$mainMod, Return, exec, \$foot
+bind = \$mainMod SHIFT, Return, exec, \$terminal
+bind = \$mainMod SHIFT, C, killactive,
+bind = \$mainMod SHIFT, X, exit,
+bind = \$mainMod, F, togglefloating,
+bind = \$mainMod, Space, exec, \$menu
+bind = \$mainMod, E, exec, \$fileManager
 
 # Focus movement
-bind = $mainMod, left, movefocus, l
-bind = $mainMod, right, movefocus, r
-bind = $mainMod, up, movefocus, u
-bind = $mainMod, down, movefocus, d
+bind = \$mainMod, left, movefocus, l
+bind = \$mainMod, right, movefocus, r
+bind = \$mainMod, up, movefocus, u
+bind = \$mainMod, down, movefocus, d
 
 # Move windows
-bind = $mainMod SHIFT, left, movewindow, l
-bind = $mainMod SHIFT, right, movewindow, r
-bind = $mainMod SHIFT, up, movewindow, u
-bind = $mainMod SHIFT, down, movewindow, d
+bind = \$mainMod SHIFT, left, movewindow, l
+bind = \$mainMod SHIFT, right, movewindow, r
+bind = \$mainMod SHIFT, up, movewindow, u
+bind = \$mainMod SHIFT, down, movewindow, d
 
-# Workspace keys
-bind = $mainMod, 1, workspace, 1
-bind = $mainMod, 2, workspace, 2
-bind = $mainMod, 3, workspace, 3
-bind = $mainMod, 4, workspace, 4
+# Workspace keys (4 workspaces)
+bind = \$mainMod, 1, workspace, 1
+bind = \$mainMod, 2, workspace, 2
+bind = \$mainMod, 3, workspace, 3
+bind = \$mainMod, 4, workspace, 4
 
-bind = $mainMod SHIFT, 1, movetoworkspace, 1
-bind = $mainMod SHIFT, 2, movetoworkspace, 2
-bind = $mainMod SHIFT, 3, movetoworkspace, 3
-bind = $mainMod SHIFT, 4, movetoworkspace, 4
+bind = \$mainMod SHIFT, 1, movetoworkspace, 1
+bind = \$mainMod SHIFT, 2, movetoworkspace, 2
+bind = \$mainMod SHIFT, 3, movetoworkspace, 3
+bind = \$mainMod SHIFT, 4, movetoworkspace, 4
 
-# Special keys
-bind = $mainMod, XF86AudioRaiseVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%+
-bind = $mainMod, XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%-
-bind = $mainMod, XF86AudioMute, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
+# Special keys for volume and brightness
+bind = \$mainMod, XF86AudioRaiseVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%+
+bind = \$mainMod, XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%-
+bind = \$mainMod, XF86AudioMute, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
+
 bind = , XF86MonBrightnessUp, exec, brightnessctl s +5%
 bind = , XF86MonBrightnessDown, exec, brightnessctl s 5%-
 
-# Mouse controls
-bindm = $mainMod, mouse:272, movewindow
-bindm = $mainMod, mouse:273, resizewindow
+# Move windows by holding Super (MOD) + Left Mouse Button (LMB)
+bindm = \$mainMod, mouse:272, movewindow
+
+# Resize windows by holding Super (MOD) + Right Mouse Button (RMB)
+bindm = \$mainMod, mouse:273, resizewindow
 
 # Screenshots
-bind = $mainMod, Print, exec, grim -g "$(slurp)" - | wl-copy
+bind = \$mainMod, Print, exec, grim -g "\$(slurp)" - | wl-copy
+
+# Plugin hyprbars
+plugin = hyprbars
+
+hyprbars {
+    height = 28
+    corners = 10
+    background-color = rgba(245,245,245,0.90)
+    font = "San Francisco:style=Regular:pixelsize=16"
+    fallback-font = "Noto Sans:style=Regular:pixelsize=16"
+    font-color = rgba(50,50,50,0.9)
+    buttons = minimize,maximize,close
+    button-layout = left
+    button-radius = 7
+    button-size = 14
+    button-spacing = 5
+    button-color-close = #ff605c
+    button-color-minimize = #ffbd44
+    button-color-maximize = #00ca4e
+    button-color-hover = rgba(160,160,160,0.20)
+    title-alignment = center
+    padding-left = 16
+    padding-right = 16
+    shadow = true
+    shadow-color = rgba(90,90,90,0.18)
+    shadow-radius = 8
+    shadow-offset-y = 2
+}
 HYPR_EOF
 
+# Hyprpaper configuration
+cat > "/home/\$USERNAME/.config/hypr/hyprpaper.conf" <<'PAPER_EOF'
+preload = ~/Pictures/wallpaper.jpg
+wallpaper = ,~/Pictures/wallpaper.jpg
+PAPER_EOF
+
+# Foot terminal configuration
+cat > "/home/\$USERNAME/.config/foot/foot.ini" <<'FOOT_EOF'
+[main]
+font=DejaVu Sans Mono:size=11
+pad=10x10
+
+[colors]
+alpha=0.95
+foreground=d8dee9
+background=2e3440
+
+[mouse]
+hide-when-typing=yes
+FOOT_EOF
+
+# Ghostty terminal configuration
+cat > "/home/\$USERNAME/.config/ghostty/config" <<'GHOSTTY_EOF'
+font-family = "DejaVu Sans Mono"
+font-size = 11
+window-padding-x = 10
+window-padding-y = 10
+background-opacity = 0.95
+
+foreground = #d8dee9
+background = #2e3440
+
+mouse-hide-while-typing = true
+prefer-wayland = true
+GHOSTTY_EOF
+
+# Wayland session file
+mkdir -p /usr/share/wayland-sessions
+cat > /usr/share/wayland-sessions/hyprland.desktop <<'SESSION_EOF'
+[Desktop Entry]
+Name=Hyprland
+Comment=A dynamic tiling Wayland compositor based on wlroots
+Exec=Hyprland
+Type=Application
+SESSION_EOF
+
+# Configure greetd
+cat > /etc/greetd/config.toml <<'GREETD_EOF'
+[terminal]
+vt = 1
+
+[default_session]
+command = "tuigreet --cmd Hyprland"
+user = "greeter"
+GREETD_EOF
+
 # Set permissions
-chown -R "$USERNAME:$USERNAME" "/home/$USERNAME/.config" || { echo "Permission set failed"; exit 1; }
+chown -R "\$USERNAME:\$USERNAME" "/home/\$USERNAME" || { echo "Permission set failed"; exit 1; }
 
 # Enable services
 systemctl enable --now bluetooth || { echo "Bluetooth enable failed"; exit 1; }
