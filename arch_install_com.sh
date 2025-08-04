@@ -392,3 +392,18 @@ POSTINSTALL
         log_error "Chroot configuration failed"
         exit 1
     fi
+
+    # Successful completion message
+    echo -e "\n${GREEN}=== INSTALLATION COMPLETED SUCCESSFULLY ===${NC}"
+    log_info "System will automatically reboot in 5 seconds..."
+    log_info "Press ${RED}Ctrl+C${NC} to cancel"
+    
+    # Visual countdown
+    for i in {5..1}; do
+        echo -ne "${YELLOW}Rebooting in ${i} seconds...${NC}\r"
+        sleep 1
+    done
+    
+    log_info "Rebooting now..."
+    reboot
+fi
