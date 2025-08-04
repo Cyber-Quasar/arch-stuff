@@ -175,7 +175,7 @@ sed -i 's/# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/' /etc/sudoers
 
 # Install and configure GRUB
 grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Arch
-echo "GRUB_TIMEOUT=1" >> /etc/default/grub
+echo "GRUB_TIMEOUT=0" >> /etc/default/grub
 grub-mkconfig -o /boot/grub/grub.cfg
 
 # Enable essential services
