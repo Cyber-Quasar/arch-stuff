@@ -400,6 +400,3 @@ POSTINSTALL
     echo
     log_info "Rebooting now..."
     reboot
-else
-    log_error "This script should only be run from the Arch Linux Live ISO"
-fi
