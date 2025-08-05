@@ -220,11 +220,11 @@ pacman -S --noconfirm --needed \
 # Install applications
 pacman -S --noconfirm --needed \
     foot waybar wofi grim slurp wl-clipboard \
-    brightnessctl pamixer ttf-noto-fonts greetd greetd-tuigreet \
+    brightnessctl pamixer ttf-noto-nerd greetd greetd-tuigreet \
     openssh syncthing thunar thunar-volman thunar-archive-plugin \
     thunar-media-tags-plugin gnome-keyring flatpak fastfetch \
-    gnome-software gnome-software-packagekit-plugin \
-    ghostty bpytop brave python python-pip cpio cmake meson gcc
+    gnome-software gnome-packagekit \
+    ghostty bpytop python python-pip cpio cmake meson gcc
 
 echo "[INFO] Base installation completed successfully!"
 echo "[INFO] Creating post-reboot script..."
