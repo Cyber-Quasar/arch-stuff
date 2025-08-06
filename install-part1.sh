@@ -219,7 +219,7 @@ pacman -S --noconfirm --needed --disable-download-timeout \
     openssh syncthing thunar thunar-volman thunar-archive-plugin \
     thunar-media-tags-plugin gnome-keyring flatpak fastfetch \
     gnome-software gnome-packagekit \
-    ghostty bpytop python python-pip cpio cmake meson gcc
+    ghostty bpytop btop python python-pip cpio cmake meson gcc
 
 echo "[INFO] Base installation completed successfully!"
 
