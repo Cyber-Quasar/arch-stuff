@@ -88,7 +88,7 @@ echo +512M      # Size
 echo n          # New partition (Swap)
 echo 2          # Partition number 2
 echo            # Default start
-echo +4G        # Size (use G not GB)
+echo +4G        # Size
 echo n          # New partition (Root)
 echo 3          # Partition number 3
 echo            # Default start
@@ -108,14 +108,15 @@ echo w          # Write changes
 # Step 5: Format partitions
 log_info "Formatting partitions..."
 mkfs.fat -F32 "${DISK}1" || log_error "EFI partition formatting failed"
+mkswap "${DISK}2" || log_error "Swap creation failed"
 swapon "${DISK}2" || log_error "Swap activation failed"
 mkfs.btrfs -f "${DISK}3" || log_error "Root partition formatting failed"
-
 # Step 6: Mount filesystems
 log_info "Mounting filesystems..."
-mount "${DISK}2" /mnt || log_error "Root mount failed"
+mount "${DISK}3" /mnt || log_error "Root mount failed"
 mkdir -p /mnt/boot/efi
 mount "${DISK}1" /mnt/boot/efi || log_error "EFI mount failed"
+# Note: swap is already activated with swapon, no need to mount
 
 # Step 7: Update package database and install base system
 log_info "Installing base system..."
