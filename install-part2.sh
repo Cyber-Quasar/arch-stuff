@@ -8,7 +8,7 @@
 # 2a. If you want to connect with wifi, do these steps:
 # rfkill unblock all
 # nmcli dev wifi list
-# nmcli dev wifi connect "<SSID_or_BSSID>" password "<password>"
+# nmcli dev wifi connect <SSID_or_BSSID> password <password>
 
 set -euo pipefail
 
