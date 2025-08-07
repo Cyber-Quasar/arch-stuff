@@ -72,7 +72,7 @@ fi
 log_warning "This will ERASE ALL DATA on $DISK and create:"
 echo "  - ${DISK}1 (EFI, 512MB)"
 echo "  - ${DISK}2 (SWAP, 4GB)"
-echo "  - ${DISK}2 (root, remaining space)"
+echo "  - ${DISK}3 (root, remaining space)"
 echo ""
 lsblk "$DISK" || log_error "Disk $DISK not found"
 confirm_continue
