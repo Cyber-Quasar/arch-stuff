@@ -81,25 +81,24 @@ confirm_continue
 log_info "Creating partitions..."
 (
 echo g          # Create GPT partition table
-
 echo n          # New partition (EFI)
 echo 1          # Partition number 1
 echo            # Default start
 echo +512M      # Size
-echo t          # Change type
-echo 1          # Select partition 1
-echo 1          # EFI System
 echo n          # New partition (Swap)
 echo 2          # Partition number 2
 echo            # Default start
-echo +4GB       # Size (adjust as needed)
-echo t          # Change type
-echo 2          # Select partition 2
-echo 19         # Linux swap
+echo +4G        # Size (use G not GB)
 echo n          # New partition (Root)
 echo 3          # Partition number 3
 echo            # Default start
 echo            # Use remaining space
+echo t          # Change type
+echo 1          # Select partition 1
+echo 1          # EFI System
+echo t          # Change type
+echo 2          # Select partition 2
+echo 19         # Linux swap
 echo t          # Change type
 echo 3          # Select partition 3
 echo 20         # Linux filesystem
