@@ -216,10 +216,10 @@ pacman -S --noconfirm --needed --disable-download-timeout \
 # Install applications
 pacman -S --noconfirm --needed --disable-download-timeout \
     foot waybar wofi grim slurp wl-clipboard \
-    brightnessctl pamixer ttf-noto-nerd greetd greetd-tuigreet \
+    brightnessctl pamixer ttf-noto-nerd \
     openssh syncthing thunar thunar-volman thunar-archive-plugin \
     thunar-media-tags-plugin gnome-keyring flatpak fastfetch \
-    gnome-software gnome-packagekit timeshift \
+    gnome-software gnome-packagekit timeshift sddm \
     ghostty bpytop python python-pip cpio cmake meson gcc
 
 echo "[INFO] Base installation completed successfully!"
@@ -240,19 +240,9 @@ Exec=Hyprland
 Type=Application
 SESSION_EOF
 
-# Configure greetd
-cat > /etc/greetd/config.toml << 'GREETD_EOF'
-[terminal]
-vt = 1
-
-[default_session]
-command = "tuigreet --cmd Hyprland"
-user = "greeter"
-GREETD_EOF
-
 # Enable services
 systemctl enable bluetooth
-systemctl enable greetd
+systemctl enable sddm
 
 # Download the post-reboot script from GitHub
 echo "[INFO] Downloading post-reboot script..."
