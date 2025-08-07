@@ -504,7 +504,7 @@ else
 fi
 
 # Check if Flatpak apps are installed
-flatpak_apps=("com.brave.Browser" "com.bitwarden.desktop" "org.localsend.localsend")
+flatpak_apps=("com.brave.Browser" "com.bitwarden.desktop" "org.localsend.localsend_app")
 for app in "${flatpak_apps[@]}"; do
     if flatpak list | grep -q "$app"; then
         log_success "Flatpak app $app is installed"
@@ -521,7 +521,7 @@ mkdir -p ~/.local/share/applications
 if [[ -d /var/lib/flatpak/exports/share/applications ]]; then
     cp /var/lib/flatpak/exports/share/applications/com.brave.Browser.desktop ~/.local/share/applications/ 2>/dev/null || true
     cp /var/lib/flatpak/exports/share/applications/com.bitwarden.desktop.desktop ~/.local/share/applications/ 2>/dev/null || true
-    cp /var/lib/flatpak/exports/share/applications/org.localsend.localsend.desktop ~/.local/share/applications/ 2>/dev/null || true
+    cp /var/lib/flatpak/exports/share/applications/org.localsend.localsend_app.desktop ~/.local/share/applications/ 2>/dev/null || true
 fi
 
 # Clean up temporary files
@@ -595,7 +595,7 @@ log_info "Installed Applications:"
 echo "  • Web Browser: flatpak run com.brave.Browser"
 echo "  • System Monitor: bpytop"
 echo "  • Password Manager: flatpak run com.bitwarden.desktop"
-echo "  • File Sharing: flatpak run org.localsend.localsend"
+echo "  • File Sharing: flatpak run org.localsend.localsend_app"
 echo "  • System Info: sysinfo"
 echo "  • Screenshots: screenshot [area|window|full]"
 echo ""
