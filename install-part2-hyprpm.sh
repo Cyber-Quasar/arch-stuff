@@ -96,7 +96,7 @@ log_success "Flatpak configured with Flathub"
 log_info "Installing Flatpak applications..."
 flatpak install -y flathub com.brave.Browser || log_warning "Failed to install Brave Browser (continuing...)"
 flatpak install -y flathub com.bitwarden.desktop || log_warning "Failed to install Bitwarden (continuing...)"
-flatpak install -y flathub org.localsend.localsend || log_warning "Failed to install LocalSend (continuing...)"
+flatpak install -y flathub org.localsend.localsend_app || log_warning "Failed to install LocalSend (continuing...)"
 log_success "Flatpak applications installed"
 
 # Create Hyprland configuration
