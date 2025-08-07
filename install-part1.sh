@@ -216,7 +216,7 @@ pacman -S --noconfirm --needed --disable-download-timeout \
 # Install applications
 pacman -S --noconfirm --needed --disable-download-timeout \
     foot waybar wofi grim slurp wl-clipboard greetd greetd-tuigreet \
-    brightnessctl pamixer ttf-noto-nerd \
+    brightnessctl pamixer ttf-noto-nerd dunst jq network-manager-applet \
     openssh syncthing thunar thunar-volman thunar-archive-plugin \
     thunar-media-tags-plugin gnome-keyring flatpak fastfetch \
     gnome-software gnome-packagekit timeshift sddm \
