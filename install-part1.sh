@@ -241,14 +241,16 @@ Type=Application
 SESSION_EOF
 
 # Install SDDM Astronaut Theme
-log_info "Installing SDDM Astronaut Theme..."
+echo "[INFO] Installing SDDM Astronaut Theme..."
 if ! curl -fsSL https://raw.githubusercontent.com/keyitdev/sddm-astronaut-theme/master/setup.sh | bash; then
-    log_error "Failed to install SDDM Astronaut Theme"
+    echo "[ERROR] Failed to install SDDM Astronaut Theme"
+    exit 1
 fi
 
 # Set Astronaut as default theme
 echo "[Theme]
 Current=astronaut" > /etc/sddm.conf.d/10-astronaut-theme.conf
+
 # Configure greetd
 cat > /etc/greetd/config.toml << 'GREETD_EOF'
 [terminal]
