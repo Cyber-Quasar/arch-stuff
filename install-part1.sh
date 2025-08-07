@@ -215,7 +215,7 @@ pacman -S --noconfirm --needed --disable-download-timeout \
 
 # Install applications
 pacman -S --noconfirm --needed --disable-download-timeout \
-    foot waybar wofi grim slurp wl-clipboard \
+    foot waybar wofi grim slurp wl-clipboard greetd greetd-tuigreet \
     brightnessctl pamixer ttf-noto-nerd \
     openssh syncthing thunar thunar-volman thunar-archive-plugin \
     thunar-media-tags-plugin gnome-keyring flatpak fastfetch \
@@ -243,6 +243,7 @@ SESSION_EOF
 # Enable services
 systemctl enable bluetooth
 systemctl enable sddm
+systemctl disable greetd
 
 # Download the post-reboot script from GitHub
 echo "[INFO] Downloading post-reboot script..."
