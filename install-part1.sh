@@ -252,7 +252,6 @@ GREETD_EOF
 
 # Enable services
 systemctl enable bluetooth
-systemctl disable sddm
 systemctl enable greetd
 
 # Download the post-reboot script from GitHub
