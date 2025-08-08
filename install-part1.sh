@@ -216,10 +216,10 @@ pacman -S --noconfirm --needed --disable-download-timeout \
 # Install applications
 pacman -S --noconfirm --needed --disable-download-timeout \
     foot waybar wofi grim slurp wl-clipboard greetd greetd-tuigreet \
-    brightnessctl pamixer ttf-noto-nerd dunst jq network-manager-applet \
+    brightnessctl pamixer ttf-noto-nerd mako jq network-manager-applet \
     openssh syncthing thunar thunar-volman thunar-archive-plugin \
     thunar-media-tags-plugin gnome-keyring flatpak fastfetch \
-    gnome-software gnome-packagekit timeshift sddm kate bleachbit gparted vlc \
+    gnome-software gnome-packagekit timeshift kate bleachbit gparted vlc \
     ghostty bpytop python python-pip cpio cmake meson gcc blueman
 
 echo "[INFO] Base installation completed successfully!"
@@ -239,17 +239,6 @@ Comment=A dynamic tiling Wayland compositor
 Exec=Hyprland
 Type=Application
 SESSION_EOF
-
-# Install SDDM Astronaut Theme
-echo "[INFO] Installing SDDM Astronaut Theme..."
-if ! curl -fsSL https://raw.githubusercontent.com/keyitdev/sddm-astronaut-theme/master/setup.sh | bash; then
-    echo "[ERROR] Failed to install SDDM Astronaut Theme"
-    exit 1
-fi
-
-# Set Astronaut as default theme
-echo "[Theme]
-Current=astronaut" > /etc/sddm.conf.d/10-astronaut-theme.conf
 
 # Configure greetd
 cat > /etc/greetd/config.toml << 'GREETD_EOF'
