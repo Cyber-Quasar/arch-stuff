@@ -263,8 +263,8 @@ GREETD_EOF
 
 # Enable services
 systemctl enable bluetooth
-systemctl enable sddm
-systemctl disable greetd
+systemctl disable sddm
+systemctl enable greetd
 
 # Download the post-reboot script from GitHub
 echo "[INFO] Downloading post-reboot script..."
@@ -287,8 +287,10 @@ arch-chroot /mnt /root/arch_install_chroot.sh || log_error "Chroot configuration
 log_info "Installation completed! Preparing for reboot..."
 log_success "After reboot:"
 log_success "1. Login as $USERNAME with the password you set"
-log_success "2. Run: ./install-part2.sh"
-log_success "3. Enjoy your new Arch Linux + Hyprland system!"
+log_success "2. Run: rfkill unblock all"
+log_success "3. Run: nmcli dev wifi connect <SSID> password <password>"
+log_success "4. Run: ./install-part2.sh"
+log_success "5. Enjoy your new Arch Linux + Hyprland system!"
 
 echo ""
 log_info "System will reboot in 10 seconds..."
