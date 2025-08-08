@@ -219,7 +219,7 @@ pacman -S --noconfirm --needed --disable-download-timeout \
     brightnessctl pamixer ttf-noto-nerd dunst jq network-manager-applet \
     openssh syncthing thunar thunar-volman thunar-archive-plugin \
     thunar-media-tags-plugin gnome-keyring flatpak fastfetch \
-    gnome-software gnome-packagekit timeshift sddm \
+    gnome-software gnome-packagekit timeshift sddm kate bleachbit gparted vlc \
     ghostty bpytop python python-pip cpio cmake meson gcc blueman
 
 echo "[INFO] Base installation completed successfully!"
